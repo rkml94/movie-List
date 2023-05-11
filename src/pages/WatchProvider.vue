@@ -1,0 +1,86 @@
+<template>
+  <div>
+    <v-row justify="center" class=" mt-4">
+      <v-btn-toggle v-model="toggle"
+                    @change="getByWatchProvider"
+                    group
+      >
+        <v-btn class="rounded-lg" value="movie">
+          <v-icon>mdi-movie-open</v-icon> &nbsp; Movies
+        </v-btn>
+        <v-btn class="rounded-lg" value="tv">Series &nbsp;
+          <v-icon>mdi-television-classic</v-icon>
+        </v-btn>
+      </v-btn-toggle>
+    </v-row>
+    <ResultList :loaded="loaded" :path="path" :results="results" :toggle="toggle" :type="toggle"/>
+    <div class="text-center mb-3">
+      <v-pagination
+          v-model="page"
+          :length="info.total_pages <= 500 ? info.total_pages : 500 "
+          total-visible="6"
+          @input="handlePageChange"
+      ></v-pagination>
+    </div>
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+import ResultList from "@/components/ResultList";
+
+const API_KEY = '98eac8fd7eda21192db847fa47bd4a13'
+export default {
+
+
+  name: "WatchProvider",
+  components: {ResultList},
+  data() {
+    return {
+      loaded: false,
+      info: [],
+      results: null,
+      region: "FR",
+      page: 1,
+      toggle: 'movie',
+      path: ''
+    }
+  },
+  mounted() {
+
+    this.getByWatchProvider()
+
+  },
+
+  methods: {
+
+    handlePageChange(value) {
+      this.page = value
+      this.getByWatchProvider()
+    },
+    getByWatchProvider() {
+      this.path = this.toggle === 'movie' ? 'm' : 's'
+      axios.get(`/discover/${this.toggle}`,
+          {
+            baseURL: 'https://api.themoviedb.org/3',
+            params: {
+              api_key: API_KEY,
+              watch_region: this.region,
+              page: this.page
+            },
+          })
+          .then((response) => {
+            this.results = response.data.results
+            this.info = response.data
+          })
+          .finally(() => (this.loaded = true))
+    }
+  }
+}
+
+
+</script>
+
+<style scoped>
+
+</style>
